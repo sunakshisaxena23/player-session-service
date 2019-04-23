@@ -1,0 +1,7 @@
+# Don't track content of these folders
+assignment/app.log
+venv/
+assignment/data/
+.DS_Store
+.idea
+
