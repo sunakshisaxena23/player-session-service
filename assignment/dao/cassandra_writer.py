@@ -4,6 +4,7 @@ from datetime import datetime
 
 
 def process_events(event_data, db):
+    _batch = 100
 
     batch = BatchStatement(consistency_level=ConsistencyLevel.QUORUM)
 
@@ -19,11 +20,17 @@ def process_events(event_data, db):
                     where player_id = ? AND session_id = ?")
     for i in event_data:
 
+        while len(batch) > _batch:
+            db._db_cur.execute(batch)
+            batch.clear()
+
         event = i['event']
         player_id = i['player_id']
         session_id = i['session_id']
         """parse string to date time format example ts : 2016-12-02T12:48:05 """
         dtime = datetime.strptime(i['ts'], '%Y-%m-%dT%H:%M:%S')
+
+
 
         if event == 'start':
             yymmddhh = int(dtime.strftime('%Y%m%d%H'))
@@ -43,6 +50,8 @@ def process_events(event_data, db):
 
         else:
             abort(400, 'Incorrect event type')
+
+
 
     if len(batch) != 0:
         db._db_cur.execute(batch)
